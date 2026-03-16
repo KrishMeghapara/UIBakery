@@ -75,6 +75,40 @@ export default API;
 `,
   },
   {
+    id: 'auth-context',
+    emoji: '🔐',
+    title: 'Authentication (Context)',
+    content: `
+**📄 \`src/context/AuthContext.js\`**
+\`\`\`javascript
+import { createContext, useState } from "react";
+
+export const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+
+  const login = (data) => {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data));
+    setUser(data);
+  };
+
+  const logout = () => {
+    localStorage.clear();
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+\`\`\`
+`,
+  },
+  {
     id: 'login',
     emoji: '🔐',
     title: 'LOGIN (REQUIRED FIRST)',
@@ -137,9 +171,17 @@ export default Login;
 \`\`\`javascript
 import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, role }) => {
   const token = localStorage.getItem("token");
-  return token ? children : <Navigate to="/" />;
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (!token) return <Navigate to="/" />;
+
+  if (role && user?.role !== role) {
+    return <h2>Access Denied</h2>;
+  }
+
+  return children;
 };
 
 export default ProtectedRoute;
